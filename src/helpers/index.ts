@@ -57,3 +57,18 @@ export function isYunExpress(providerStr: string) {
   return upperStr.includes('YUN');
 }
 
+export function isTikTokShop(url: string) {
+  const upperStr = url.toUpperCase();
+  return upperStr.includes('TIKTOK');
+}
+
+export function isShopee(url: string) {
+  const upperStr = url.toUpperCase();
+  return upperStr.includes('SHOPEE');
+}
+
+export function isLazada(url: string) {
+  const upperStr = url.toUpperCase();
+  return upperStr.includes('LAZADA');
+}
+
