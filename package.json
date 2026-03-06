@@ -36,12 +36,9 @@
     "lodash": "^4.17.23",
     "morgan": "^1.10.0",
     "node-fetch": "^3.3.2",
-    "playwright": "^1.56.1",
+    "playwright": "^1.58.2",
     "playwright-extra": "^4.3.6",
-    "puppeteer": "^24.32.0",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-recaptcha": "^3.6.8",
-    "puppeteer-extra-plugin-stealth": "^2.11.2"
+    "puppeteer-extra-plugin-recaptcha": "^3.6.8"
   },
   "devDependencies": {
     "@types/compression": "^1.7.5",
