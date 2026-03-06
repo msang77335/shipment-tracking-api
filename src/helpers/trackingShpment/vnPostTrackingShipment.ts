@@ -143,7 +143,7 @@ async function attemptScreenshot(page: Page, url: string, code: string, attempt:
   const hasTrackingData = await checkTrackingDataPresent(page);
 
   if (!hasTrackingData) {
-    const errorMsg = attempt < maxRetries 
+    const errorMsg = attempt < maxRetries
       ? 'No tracking data found, will retry'
       : 'No tracking data found after all retries';
     throw new Error(errorMsg);

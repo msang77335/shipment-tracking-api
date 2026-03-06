@@ -22,6 +22,7 @@ export interface EnvConfig {
   captchaSolverApiKey?: string;
   captcha2CaptchaKey?: string;
   captchaAnticaptchaKey?: string;
+  sadCaptchaLicenseKey?: string;
   
   // AI Services
   geminiApiKey?: string;
@@ -29,6 +30,10 @@ export interface EnvConfig {
   
   // Browser Services
   browserlessApiToken?: string;
+
+  // Shopee Credentials
+  shopeeUsername?: string;
+  shopeePassword?: string;
 }
 
 /**
@@ -49,7 +54,8 @@ export function getEnv(): EnvConfig {
     trustProxy: process.env.TRUST_PROXY || 'loopback, linklocal, uniquelocal',    
     // Captcha Services
     captchaSolverApiKey: process.env.CAPTCHA_SOLVER_API_KEY || undefined,
-    
+    sadCaptchaLicenseKey: process.env.SADCAPTCHA_LICENSE_KEY || undefined,
+
     // AI Services
     geminiApiKey: process.env.GEMINI_API_KEY || undefined,
     
@@ -58,6 +64,10 @@ export function getEnv(): EnvConfig {
 
     // API Key for accessing the API
     xApiKey: process.env.X_API_KEY || undefined,
+
+    // Shopee Credentials
+    shopeeUsername: process.env.SHOPEE_USERNAME || undefined,
+    shopeePassword: process.env.SHOPEE_PASSWORD || undefined,
   };
 }
 
@@ -95,7 +105,9 @@ console.log('✅ Environment configuration loaded:', {
   apiPrefix: env.apiPrefix,
   trustProxy: env.trustProxy,
   hasCaptchaSolverApiKey: !!env.captchaSolverApiKey,
+  hasSadCaptchaLicenseKey: !!env.sadCaptchaLicenseKey,
   hasGeminiApiKey: !!env.geminiApiKey,
   hasBrowserlessApiToken: !!env.browserlessApiToken,
   hasXApiKey: !!env.xApiKey,
+  hasShopeeCredentials: !!(env.shopeeUsername && env.shopeePassword),
 }); 

@@ -1,7 +1,8 @@
 import { Request, Response, Router } from 'express';
-import { isLazada, isShopee } from '../helpers';
+import { isLazada, isShopee, isTikTokShop } from '../helpers';
 import { lazadaCheckShop } from '../helpers/checkShop/lazadaScheckShop';
 import { shopeeCheckShop } from '../helpers/checkShop/shopeeScheckShop';
+import { tiktokShopCheckShop } from '../helpers/checkShop/tiktokCheckShop';
 
 const router = Router();
 
@@ -51,6 +52,9 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     } else if (isShopee(url)) {
       console.log(`🔍 [CHECK SHOP ROUTE] Detected Shopee URL, using shopeeCheckShop...`);
       result = await shopeeCheckShop(url);
+    } else if(isTikTokShop(url)) {
+      console.log(`🔍 [CHECK SHOP ROUTE] Detected TikTok Shop URL, using tiktokShopCheckShop...`);
+      result = await tiktokShopCheckShop(url);
     } else {
       console.log(`❌ [CHECK SHOP ROUTE] Unsupported URL: ${url}`);
       res.status(400).json({
