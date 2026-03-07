@@ -1,36 +1,46 @@
-FROM node:20-bookworm
+# =============================================
+# Stage 1: Builder
+# =============================================
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# =========================
-# 1. Install Node deps
-# =========================
+# Install deps and build
 COPY package*.json ./
-RUN npm install && npx playwright install --with-deps firefox
+RUN npm install
 
-# =========================
-# 3. Copy source code
-# =========================
 COPY . .
-
-# =========================
-# 4. Build app
-# =========================
 RUN npm run build
 
+# =============================================
+# Stage 2: Production
+# =============================================
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+# Copy only production artifacts
+COPY package*.json ./
+RUN npm install --omit=dev
+
+# Install Playwright firefox browser
+RUN npx playwright install firefox
+
+COPY --from=builder /app/dist ./dist
+
 # =========================
-# 5. Expose port
+# Expose port
 # =========================
 EXPOSE 8080
 
 # =========================
-# 6. Xvfb display
+# Environment
 # =========================
 ENV DISPLAY=:99
 ENV NODE_ENV=production
 
 # =========================
-# 7. Start app
+# Start app
 # =========================
 CMD ["sh", "-c", "rm -f /tmp/.X99-lock && Xvfb :99 -screen 0 1280x720x24 & npm start"]
 
