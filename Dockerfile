@@ -1,11 +1,10 @@
 # =============================================
-# Stage 1: Builder
+# Stage 1: Builder (Alpine - nhẹ, chỉ build TS)
 # =============================================
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install deps and build
 COPY package*.json ./
 RUN npm install
 
@@ -13,19 +12,25 @@ COPY . .
 RUN npm run build
 
 # =============================================
-# Stage 2: Production
+# Stage 2: Production (Bookworm - đủ libs cho Playwright)
 # =============================================
-FROM node:20-alpine AS production
+FROM node:20-bookworm-slim AS production
+
+# Install Xvfb and system dependencies for Playwright Firefox
+RUN apt-get update && apt-get install -y \
+    xvfb \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy only production artifacts
+# Install production dependencies only
 COPY package*.json ./
 RUN npm install --omit=dev
 
-# Install Playwright firefox browser
-RUN npx playwright install firefox
+# Install Playwright Firefox + all required system deps
+RUN npx playwright install --with-deps firefox
 
+# Copy built app from builder stage
 COPY --from=builder /app/dist ./dist
 
 # =========================
