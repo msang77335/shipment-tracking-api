@@ -17,9 +17,9 @@ RUN npm run build
 FROM node:20-bookworm-slim AS production
 
 # Install Xvfb and system dependencies for Playwright Firefox
-RUN apt-get update && apt-get install -y \
-    xvfb \
-    && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y \
+#     xvfb \
+#     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
