@@ -14,7 +14,7 @@ const getTrackingURL = (codes: string, provider: string) => {
 async function navigateAndSolveRecaptcha(page: Page, trackingURL: string, attempt: number, maxRetries: number) {
   console.log(`🌐 [AFTERSHIP] Navigating to aftership.com (attempt ${attempt}/${maxRetries})...`);
   await page.goto(trackingURL, {
-    waitUntil: 'domcontentloaded',
+    waitUntil: 'networkidle',
     timeout: 60 * 1000 // 60 seconds
   });
   console.log(`✅ [AFTERSHIP] Page loaded successfully`);
@@ -179,12 +179,23 @@ async function attemptScreenshot({ page, codes, provider, attempt, maxRetries }:
   return null;
 }
 
-async function retryTrackingShipment({ page, codes, provider, maxRetries }: { page: Page; codes: string; provider: string; maxRetries: number; }): Promise<{ buffer: Buffer; status: string }> {
+async function runAttempt(browserContext: import('playwright').BrowserContext, codes: string, provider: string, attempt: number, maxRetries: number): Promise<{ buffer: Buffer; status: string } | null> {
+  const page = await browserContext.newPage();
+  page.setDefaultTimeout(60000);
+  console.log(`🆕 [AFTERSHIP] Creating fresh page for attempt ${attempt}/${maxRetries}...`);
+  try {
+    return await attemptScreenshot({ page, codes, provider, attempt, maxRetries });
+  } finally {
+    if (!page.isClosed()) await page.close();
+  }
+}
+
+async function retryTrackingShipment({ browserContext, codes, provider, maxRetries }: { browserContext: import('playwright').BrowserContext; codes: string; provider: string; maxRetries: number; }): Promise<{ buffer: Buffer; status: string }> {
   let lastError;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const result = await attemptScreenshot({ page, codes, provider, attempt, maxRetries });
+      const result = await runAttempt(browserContext, codes, provider, attempt, maxRetries);
 
       if (result) {
         return result;
@@ -216,7 +227,6 @@ async function retryTrackingShipment({ page, codes, provider, maxRetries }: { pa
 export async function aftershipTrackingShpment({ codes, provider }: ScreenshotQuery): Promise<{ status: string; buffer: Buffer }> {
   console.log(`📍 [AFTERSHIP] Starting screenshot for tracking: ${codes}`);
 
-  let page;
   const browserContext = await PlaywrightBrowserSingleton.getContext();
   if (!browserContext) {
     throw new Error('Failed to get browser context');
@@ -225,17 +235,11 @@ export async function aftershipTrackingShpment({ codes, provider }: ScreenshotQu
   const maxRetries = 3;
 
   try {
-    console.log(`🆕 [AFTERSHIP] Creating new page...`);
-    page = await browserContext.newPage();
-    page.setDefaultTimeout(60000); // 60 seconds
-    console.log(`⏱️ [AFTERSHIP] Default timeout set to 60 seconds`);
-
-    const { buffer, status } = await retryTrackingShipment({ page, codes, provider, maxRetries });
+    const { buffer, status } = await retryTrackingShipment({ browserContext, codes, provider, maxRetries });
 
     const statusArray = status.split(',');
     const allDelivered = statusArray.every(s => s === 'DELIVERED');
 
-    console.log(`🔒 [AFTERSHIP] Closing page after success...`);
     return {
       buffer,
       status: allDelivered ? 'DELIVERED' : 'UNKNOWN'
@@ -243,10 +247,5 @@ export async function aftershipTrackingShpment({ codes, provider }: ScreenshotQu
   } catch (error) {
     console.error(`💥 [AFTERSHIP] Error in aftershipScreenshouter:`, error);
     throw error;
-  } finally {
-    if (page && !page.isClosed()) {
-      console.log(`🔒 [AFTERSHIP] Closing page in finally block...`);
-      await page.close();
-    }
   }
 }
