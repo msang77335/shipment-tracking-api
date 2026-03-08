@@ -1,4 +1,7 @@
-FROM node:20-bookworm-slim AS builder
+# =============================================
+# Stage 1: Builder (Alpine - nhẹ, chỉ build TS)
+# =============================================
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -8,27 +11,39 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-FROM node:20-bookworm-slim
+# =============================================
+# Stage 2: Production (Bookworm - đủ libs cho Playwright)
+# =============================================
+FROM node:20-bookworm-slim AS production
+
+# Install Xvfb and system dependencies for Playwright Firefox
+RUN apt-get update && apt-get install -y \
+    xvfb \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-#RUN apt-get update && apt-get install -y --no-install-recommends \
-#    && rm -rf /var/lib/apt/lists/*
+# Install production dependencies and Playwright Firefox
+COPY package*.json ./
+RUN npm install --omit=dev \
+    && npx playwright install --with-deps firefox
 
-COPY --from=builder /app/package*.json ./
+# Copy built app from builder stage
 COPY --from=builder /app/dist ./dist
 
-RUN npm install --omit=dev
-RUN npx playwright install --with-deps firefox
+# =========================
+# Expose port
+# =========================
+EXPOSE 8080
 
-#RUN npm ci --omit=dev
-#RUN npx playwright install firefox
-
-RUN npm cache clean --force
-
+# =========================
+# Environment
+# =========================
 ENV DISPLAY=:99
 ENV NODE_ENV=production
 
-EXPOSE 9066
-
+# =========================
+# Start app
+# =========================
 CMD ["sh", "-c", "rm -f /tmp/.X99-lock && Xvfb :99 -screen 0 1280x720x24 & npm start"]
+

@@ -14,13 +14,17 @@ const getTrackingURL = (codes: string, provider: string) => {
 async function navigateAndSolveRecaptcha(page: Page, trackingURL: string, attempt: number, maxRetries: number) {
   console.log(`🌐 [AFTERSHIP] Navigating to aftership.com (attempt ${attempt}/${maxRetries})...`);
   await page.goto(trackingURL, {
-    waitUntil: 'networkidle'
+    waitUntil: 'domcontentloaded',
+    timeout: 60 * 1000 // 60 seconds
   });
   console.log(`✅ [AFTERSHIP] Page loaded successfully`);
 
   console.log(`🔍 [AFTERSHIP] Attempting to solve reCAPTCHAs...`);
+  page.setDefaultTimeout(180000); // 3 minutes for captcha solving
   const result = await page.solveRecaptchas();
-  console.log(`✅ [AFTERSHIP] reCAPTCHA result:`, {
+  page.setDefaultTimeout(60000); // restore to 60 seconds
+  console.log(`✅ [AFTERSHIP] reCAPTCHA result:`,
+ {
     captchasFound: result.captchas?.length || 0,
     solutionsCount: result.solutions?.length || 0,
     solvedCount: result.solved?.length || 0,
@@ -223,8 +227,8 @@ export async function aftershipTrackingShpment({ codes, provider }: ScreenshotQu
   try {
     console.log(`🆕 [AFTERSHIP] Creating new page...`);
     page = await browserContext.newPage();
-    page.setDefaultTimeout(120000); // 120 seconds
-    console.log(`⏱️ [AFTERSHIP] Default timeout set to 120 seconds`);
+    page.setDefaultTimeout(60000); // 60 seconds
+    console.log(`⏱️ [AFTERSHIP] Default timeout set to 60 seconds`);
 
     const { buffer, status } = await retryTrackingShipment({ page, codes, provider, maxRetries });
 
